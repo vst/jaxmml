@@ -1,0 +1,15 @@
+<jxb:bindings xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:jxb="http://java.sun.com/xml/ns/jaxb" version="2.1">
+    <jxb:bindings schemaLocation="xmml_v2.xsd">
+        <jxb:bindings node="//xsd:element[@name='xmodel']/xsd:complexType/xsd:attribute[@name='version']">
+            <jxb:property name="schemaVersion" />
+        </jxb:bindings>
+        <jxb:schemaBindings>
+          <jxb:nameXmlTransform>
+            <jxb:typeName prefix="XSD"/>
+            <jxb:anonymousTypeName prefix="XSD"/>
+            <jxb:elementName prefix="XSD"/>
+          </jxb:nameXmlTransform>
+        </jxb:schemaBindings>
+    </jxb:bindings>
+</jxb:bindings>
