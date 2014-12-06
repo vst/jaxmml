@@ -3,10 +3,14 @@ package com.vsthost.rnd.flame;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.vsthost.rnd.flame.xsd.XSDModels;
+import com.vsthost.rnd.flame.xsd.XSDXmodel;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
+import javax.xml.bind.JAXBException;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 /**
@@ -108,5 +112,26 @@ class CommandValidate {
      */
     public void run() {
         Log.trace("Running command: 'validate'");
+        try {
+            Log.trace("Reading the XMML specification...");
+            XModel xmodel = XModel.parseXMML(files.get(0));
+            Log.trace("XMML specification successfully read.");
+
+            System.out.println("[Valid]\t" + xmodel.getPath());
+            for(XModel i : xmodel.models) {
+                System.out.println("[Valid]\t" + i.getPath());
+            }
+            System.exit(0);
+        }
+        catch (JAXBException e) {
+            System.err.println("Cannot parse XMML file.");
+            Log.error("Cannot parse XMML file.", e);
+            System.exit(1);
+        }
+        catch (FileNotFoundException e) {
+            System.err.println("File cannot be found.");
+            Log.error("File cannot be found.", e);
+            System.exit(1);
+        }
     }
 }
