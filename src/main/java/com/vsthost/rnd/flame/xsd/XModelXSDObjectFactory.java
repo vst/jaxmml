@@ -3,7 +3,9 @@ package com.vsthost.rnd.flame.xsd;
 import javax.xml.bind.annotation.XmlRegistry;
 
 /**
- * Created by vst on 6/12/14.
+ * Overrides the XSD generated ObjectFactory to extend xmodel element.
+ *
+ * @author Vehbi Sinan Tunalioglu
  */
 @XmlRegistry
 public class XModelXSDObjectFactory extends ObjectFactory {

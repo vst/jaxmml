@@ -2,16 +2,22 @@ package com.vsthost.rnd.flame.xsd;
 
 import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.*;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by vst on 6/12/14.
+ * Extends the xmodel element and provides main xmodel class abstraction.
+ *
+ * @author Vehbi Sinan Tunalioglu
  */
 public class XModel extends XSDXmodel {
     /**
@@ -52,7 +58,7 @@ public class XModel extends XSDXmodel {
         this.path = path;
     }
 
-    private void parseNestedModels () throws FileNotFoundException, JAXBException {
+    private void parseNestedModels () throws FileNotFoundException, JAXBException, SAXException {
         // Initialise the nested nestedModels:
         this.nestedModels = new ArrayList<XModel>();
 
@@ -69,7 +75,7 @@ public class XModel extends XSDXmodel {
      *
      * @return Nested models.
      */
-    public List<XModel> getNestedModels () throws FileNotFoundException, JAXBException {
+    public List<XModel> getNestedModels () throws FileNotFoundException, JAXBException, SAXException {
         // Check if we have already parsed:
         if (this.nestedModels != null) {
             return this.nestedModels;
@@ -93,7 +99,7 @@ public class XModel extends XSDXmodel {
      * @param filepath File path to the XMML file.
      * @return An XModel instance.
      */
-    public static XModel parseXMML(String filepath) throws FileNotFoundException, JAXBException {
+    public static XModel parseXMML(String filepath) throws FileNotFoundException, JAXBException, SAXException {
         File file = new File(filepath);
         return XModel.parseXMML(file.getParent(), file.getName());
     }
@@ -105,14 +111,24 @@ public class XModel extends XSDXmodel {
      * @param filepath File path to the XMML file.
      * @return An XModel instance.
      */
-    public static XModel parseXMML(String baseDirectory, String filepath) throws FileNotFoundException, JAXBException {
+    public static XModel parseXMML(String baseDirectory, String filepath) throws FileNotFoundException, JAXBException, SAXException {
         Log.trace("Parsing fileapath '" + filepath + "'");
+
+        // Set up the schema:
+        SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = sf.newSchema(XModel.class.getClassLoader().getResource("xsd/xmml_v2.xsd"));
 
         // Create the JAXB Context:
         JAXBContext context = JAXBContext.newInstance(XModelXSDObjectFactory.class);
 
         // Get the unmarshaller:
         Unmarshaller unmarshaller = context.createUnmarshaller();
+
+        // Set the schema:
+        unmarshaller.setSchema(schema);
+
+        // Set the validation event handler:
+        unmarshaller.setEventHandler(new XMMLValidatorEventHandler());
 
         // We want to use our own object factory instead of the XJC generated one:
         unmarshaller.setProperty("com.sun.xml.internal.bind.ObjectFactory", new XModelXSDObjectFactory());

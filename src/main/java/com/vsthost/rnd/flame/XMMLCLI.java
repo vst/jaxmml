@@ -7,6 +7,7 @@ import com.vsthost.rnd.flame.xsd.XModel;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import java.io.FileNotFoundException;
@@ -121,6 +122,11 @@ class CommandValidate {
                 System.out.println("[Valid]\t" + i.getPath());
             }
             System.exit(0);
+        }
+        catch (SAXException e) {
+            System.err.println("Cannot parse XMML file. Validation failed.");
+            Log.error("Cannot parse XMML file. Validation failed.", e);
+            System.exit(1);
         }
         catch (JAXBException e) {
             System.err.println("Cannot parse XMML file.");
