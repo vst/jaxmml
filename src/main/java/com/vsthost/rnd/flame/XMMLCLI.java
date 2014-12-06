@@ -3,8 +3,7 @@ package com.vsthost.rnd.flame;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.vsthost.rnd.flame.xsd.XSDModels;
-import com.vsthost.rnd.flame.xsd.XSDXmodel;
+import com.vsthost.rnd.flame.xsd.XModel;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -118,7 +117,7 @@ class CommandValidate {
             Log.trace("XMML specification successfully read.");
 
             System.out.println("[Valid]\t" + xmodel.getPath());
-            for(XModel i : xmodel.models) {
+            for(XModel i : xmodel.getNestedModels()) {
                 System.out.println("[Valid]\t" + i.getPath());
             }
             System.exit(0);

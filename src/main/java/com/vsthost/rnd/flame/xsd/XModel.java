@@ -1,11 +1,8 @@
-package com.vsthost.rnd.flame;
+package com.vsthost.rnd.flame.xsd;
 
 import ch.qos.logback.classic.Logger;
-import com.vsthost.rnd.flame.xsd.XSDModels;
-import com.vsthost.rnd.flame.xsd.XSDXmodel;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.FileDataSource;
 import javax.xml.bind.*;
 import javax.xml.transform.stream.StreamSource;
 import java.io.File;
@@ -16,7 +13,7 @@ import java.util.List;
 /**
  * Created by vst on 6/12/14.
  */
-public class XModel {
+public class XModel extends XSDXmodel {
     /**
      * Defines the logger for the class.
      */
@@ -33,27 +30,9 @@ public class XModel {
     private String path;
 
     /**
-     * Defines nested models:
+     * Defines nested nestedModels:
      */
-    public List<XModel> models = new ArrayList<XModel>();
-
-    /**
-     * Returns the data of the XModel.
-     *
-     * @return The data of the XModel.
-     */
-    public XSDXmodel getData() {
-        return data;
-    }
-
-    /**
-     * Sets the data of the XModel.
-     *
-     * @param data The data of the XModel.
-     */
-    public void setData(XSDXmodel data) {
-        this.data = data;
-    }
+    private List<XModel> nestedModels;
 
     /**
      * Returns the path of the XMML file.
@@ -73,9 +52,39 @@ public class XModel {
         this.path = path;
     }
 
+    private void parseNestedModels () throws FileNotFoundException, JAXBException {
+        // Initialise the nested nestedModels:
+        this.nestedModels = new ArrayList<XModel>();
+
+        // Read and add nestedModels:
+        if (this.getModels() != null) {
+            for (XSDModels.XSDModel i : this.getModels().getModel()) {
+                this.nestedModels.add(XModel.parseXMML(new File(this.getPath()).getParent(), i.getFile()));
+            }
+        }
+    }
+
+    /**
+     * Returns nested models.
+     *
+     * @return Nested models.
+     */
+    public List<XModel> getNestedModels () throws FileNotFoundException, JAXBException {
+        // Check if we have already parsed:
+        if (this.nestedModels != null) {
+            return this.nestedModels;
+        }
+
+        // Parse nestedModels and populate our nested nestedModels:
+        this.parseNestedModels();
+
+        // Return nested nestedModels:
+        return this.nestedModels;
+    }
+
     @Override
     public String toString() {
-        return String.format("%s (%s)", this.getData().getName(), this.getPath());
+        return String.format("%s (%s)", this.getName(), this.getPath());
     }
 
     /**
@@ -99,26 +108,22 @@ public class XModel {
     public static XModel parseXMML(String baseDirectory, String filepath) throws FileNotFoundException, JAXBException {
         Log.trace("Parsing fileapath '" + filepath + "'");
 
-        // Create the xmodel instance.
-        XModel xmodel = new XModel();
+        // Create the JAXB Context:
+        JAXBContext context = JAXBContext.newInstance(XModelXSDObjectFactory.class);
+
+        // Get the unmarshaller:
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+
+        // We want to use our own object factory instead of the XJC generated one:
+        unmarshaller.setProperty("com.sun.xml.internal.bind.ObjectFactory", new XModelXSDObjectFactory());
+
+        // Get the XModel:
+        XModel xmodel = (XModel) unmarshaller.unmarshal(new StreamSource(new File(baseDirectory, filepath)));
 
         // Set the path:
         xmodel.setPath(new File(baseDirectory + "/" + filepath).getAbsolutePath());
 
-        // Set the data:
-        xmodel.setData((XSDXmodel) JAXBContext
-                .newInstance("com.vsthost.rnd.flame.xsd")
-                .createUnmarshaller()
-                .unmarshal(new StreamSource(new File(baseDirectory, filepath))));
-
-        // Get nested models:
-        if (xmodel.getData().getModels() != null) {
-            for (XSDModels.XSDModel i : xmodel.getData().getModels().getModel()) {
-                xmodel.models.add(XModel.parseXMML(baseDirectory, i.getFile()));
-            }
-        }
-
-        // Done, return:
+        // Return the xmodel:
         return xmodel;
     }
 }
